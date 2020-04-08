@@ -29,19 +29,81 @@ namespace FamilyFriendlyBot.Modules
         [Alias("filmik")]
         public async Task VideoAsync()
         {
-            var browser = new ScrapingBrowser();
-
-            WebPage page = browser.NavigateToPage(website);
-
-            var nodes = page.Html.CssSelect("a.linkVideoThumb");
-
-            List<PornVideo> videos = new List<PornVideo>();
-
-            foreach (var video in nodes)
+            using (Context.Channel.EnterTypingState())
             {
-                string title = WebUtility.HtmlDecode(video.GetAttributeValue("title"));
-                Uri fullVideoUrl = new Uri(website, video.GetAttributeValue("href"));
-                var imgNode = video.ChildNodes.ToArray()[1];
+                var browser = new ScrapingBrowser();
+
+                WebPage page = browser.NavigateToPage(website);
+
+                var nodes = page.Html.CssSelect("a.linkVideoThumb");
+
+                List<PornVideo> videos = new List<PornVideo>();
+
+                foreach (var video in nodes)
+                {
+                    string title = WebUtility.HtmlDecode(video.GetAttributeValue("title"));
+                    Uri fullVideoUrl = new Uri(website, video.GetAttributeValue("href"));
+                    var imgNode = video.ChildNodes.ToArray()[1];
+                    Uri imageUri;
+                    try
+                    {
+                        imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
+                    }
+                    catch (Exception)
+                    {
+                        imageUri = new Uri("https://i2.wp.com/www.scribblesandcrumbs.com/wp-content/plugins/penci-portfolio//images/no-thumbnail.jpg");
+                    }
+                    videos.Add(new PornVideo
+                    {
+                        Title = title,
+                        VideoUri = fullVideoUrl,
+                        ThumbnailUri = imageUri
+                    });
+                }
+
+                int itemNum = _rand.Next(0, videos.Count - 1);
+
+                var builder = new EmbedBuilder()
+                {
+                    Color = new Color(0xFFA31A),
+                    Title = "Filmik dla ciebie",
+                    Description = videos[itemNum].Title
+                };
+                builder.WithImageUrl(videos[itemNum].ThumbnailUri.ToString());
+                builder.AddField(new EmbedFieldBuilder()
+                {
+                    Name = $"Link: {videos[itemNum].VideoUri}",
+                    Value = $"Obejrzyj go [TUTAJ]({videos[itemNum].VideoUri})"
+                });
+                builder.WithCurrentTimestamp();
+
+                await ReplyAsync("", false, builder.Build());
+            }
+        }
+
+        [Command("video")]
+        [Summary("Daje losowy filmik pasujący do wyszukiwania ze strony Pornhub")]
+        [Alias("filmik")]
+        public async Task VideoAsync(
+            [Summary("Słowa kluczowe")][Remainder]string query)
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                var browser = new ScrapingBrowser();
+
+                query = query.Replace(' ', '+');
+
+                Uri searchUri = new Uri(website, $"/video/search?search={query}");
+
+                WebPage page = browser.NavigateToPage(searchUri);
+
+                var nodes = page.Html.CssSelect("#videoSearchResult").First();
+
+                var vidNode = nodes.ChildNodes[3].FirstChild.NextSibling.FirstChild.NextSibling.ChildNodes[3].FirstChild.NextSibling;
+
+                string title = WebUtility.HtmlDecode(vidNode.GetAttributeValue("title"));
+                Uri fullVideoUrl = new Uri(website, vidNode.GetAttributeValue("href"));
+                var imgNode = vidNode.ChildNodes.ToArray()[1];
                 Uri imageUri;
                 try
                 {
@@ -51,91 +113,35 @@ namespace FamilyFriendlyBot.Modules
                 {
                     imageUri = new Uri("https://i2.wp.com/www.scribblesandcrumbs.com/wp-content/plugins/penci-portfolio//images/no-thumbnail.jpg");
                 }
-                videos.Add(new PornVideo
+                var outVid = new PornVideo
                 {
                     Title = title,
                     VideoUri = fullVideoUrl,
                     ThumbnailUri = imageUri
-                });
-            }
+                };
 
-            int itemNum = _rand.Next(0, videos.Count - 1);
-
-            var builder = new EmbedBuilder()
-            {
-                Color = new Color(0xFFA31A),
-                Title = "Filmik dla ciebie",
-                Description = videos[itemNum].Title
-            };
-            builder.WithImageUrl(videos[itemNum].ThumbnailUri.ToString());
-            builder.AddField(new EmbedFieldBuilder()
-            {
-                Name = $"Link: {videos[itemNum].VideoUri}",
-                Value = $"Obejrzyj go [TUTAJ]({videos[itemNum].VideoUri})"
-            });
-            builder.WithCurrentTimestamp();
-
-            await ReplyAsync("", false, builder.Build());
-        }
-
-        [Command("video")]
-        [Summary("Daje losowy filmik pasujący do wyszukiwania ze strony Pornhub")]
-        [Alias("filmik")]
-        public async Task VideoAsync(
-            [Summary("Słowa kluczowe")][Remainder]string query)
-        {
-            var browser = new ScrapingBrowser();
-
-            query = query.Replace(' ', '+');
-
-            Uri searchUri = new Uri(website, $"/video/search?search={query}");
-
-            WebPage page = browser.NavigateToPage(searchUri);
-
-            var nodes = page.Html.CssSelect("#videoSearchResult").First();
-
-            var vidNode = nodes.ChildNodes[3].FirstChild.NextSibling.FirstChild.NextSibling.ChildNodes[3].FirstChild.NextSibling;
-
-            string title = WebUtility.HtmlDecode(vidNode.GetAttributeValue("title"));
-            Uri fullVideoUrl = new Uri(website, vidNode.GetAttributeValue("href"));
-            var imgNode = vidNode.ChildNodes.ToArray()[1];
-            Uri imageUri;
-            try
-            {
-                imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
-            }
-            catch (Exception)
-            {
-                imageUri = new Uri("https://i2.wp.com/www.scribblesandcrumbs.com/wp-content/plugins/penci-portfolio//images/no-thumbnail.jpg");
-            }
-            var outVid = new PornVideo
-            {
-                Title = title,
-                VideoUri = fullVideoUrl,
-                ThumbnailUri = imageUri
-            };
-
-            var builder = new EmbedBuilder()
-            {
-                Color = new Color(0xFFA31A),
-                Title = "Tego szukałeś/aś?",
-                Description = outVid.Title
-            };
-
-            builder.WithImageUrl(outVid.ThumbnailUri.ToString());
-            builder.AddField(new EmbedFieldBuilder()
-            {
-                Name = $"Link: {outVid.VideoUri}",
-                Value = $"Obejrzyj go [TUTAJ]({outVid.VideoUri})"
-            })
-                .WithFooter(new EmbedFooterBuilder()
+                var builder = new EmbedBuilder()
                 {
-                    Text = "Jeśli nie tego szukałeś/aś, spróbuj wprowadzić inne zapytanie"
-                });
+                    Color = new Color(0xFFA31A),
+                    Title = "Tego szukałeś/aś?",
+                    Description = outVid.Title
+                };
 
-            builder.WithCurrentTimestamp();
+                builder.WithImageUrl(outVid.ThumbnailUri.ToString());
+                builder.AddField(new EmbedFieldBuilder()
+                {
+                    Name = $"Link: {outVid.VideoUri}",
+                    Value = $"Obejrzyj go [TUTAJ]({outVid.VideoUri})"
+                })
+                    .WithFooter(new EmbedFooterBuilder()
+                    {
+                        Text = "Jeśli nie tego szukałeś/aś, spróbuj wprowadzić inne zapytanie"
+                    });
 
-            await ReplyAsync("", false, builder.Build());
+                builder.WithCurrentTimestamp();
+
+                await ReplyAsync("", false, builder.Build());
+            }
         }
     }
 
