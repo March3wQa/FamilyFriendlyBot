@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace FamilyFriendlyBot.Modules
 {
-    [Group("help")]
     [Summary("Pomoc")]
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
@@ -19,7 +18,7 @@ namespace FamilyFriendlyBot.Modules
             _service = service;
         }
 
-        [Command("")]
+        [Command("help")]
         [Summary("Pokazuje dostępne komendy")]
         [Alias("commands", "komendy")]
         public async Task HelpAsync()
@@ -51,7 +50,7 @@ namespace FamilyFriendlyBot.Modules
                             paramDesc += "^";
                         paramDesc += param.Name;
                         if (param.DefaultValue != null)
-                            paramDesc += $"={param.DefaultValue.ToString()}";
+                            paramDesc += $"={param.DefaultValue}";
                         if (param.IsOptional)
                             paramDesc += "]";
                         else
@@ -81,8 +80,9 @@ namespace FamilyFriendlyBot.Modules
             await ReplyAsync("", false, builder.Build());
         }
 
-        [Command("")]
+        [Command("help")]
         [Summary("Detale o komendzie")]
+        [Alias("komenda", "command")]
         public async Task HelpAsync([Summary("Komenda o której chcesz wiedzieć więcej")][Remainder]string command)
         {
             var result = _service.Search(Context, command);
@@ -117,7 +117,7 @@ namespace FamilyFriendlyBot.Modules
                         paramDesc += "^";
                     paramDesc += param.Name;
                     if (param.DefaultValue != null)
-                        paramDesc += $"={param.DefaultValue.ToString()}";
+                        paramDesc += $"={param.DefaultValue}";
                     if (param.IsOptional)
                         paramDesc += "]";
                     else

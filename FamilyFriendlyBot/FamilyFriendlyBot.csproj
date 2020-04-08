@@ -9,5 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.1.1" />
+    <PackageReference Include="ScrapySharp" Version="3.0.0" />
   </ItemGroup>
 </Project>
