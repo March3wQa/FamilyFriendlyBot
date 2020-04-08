@@ -42,7 +42,15 @@ namespace FamilyFriendlyBot.Modules
                 string title = WebUtility.HtmlDecode(video.GetAttributeValue("title"));
                 Uri fullVideoUrl = new Uri(website, video.GetAttributeValue("href"));
                 var imgNode = video.ChildNodes.ToArray()[1];
-                Uri imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
+                Uri imageUri;
+                try
+                {
+                    imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
+                }
+                catch (Exception)
+                {
+                    imageUri = new Uri("https://i2.wp.com/www.scribblesandcrumbs.com/wp-content/plugins/penci-portfolio//images/no-thumbnail.jpg");
+                }
                 videos.Add(new PornVideo
                 {
                     Title = title,
@@ -84,14 +92,9 @@ namespace FamilyFriendlyBot.Modules
 
             WebPage page = browser.NavigateToPage(searchUri);
 
-            var nodes = page.Html.CssSelect("a.linkVideoThumb");
+            var nodes = page.Html.CssSelect("#videoSearchResult").First();
 
-            var vidNode = nodes.Where(x => x.GetAttributeValue("title") == query).FirstOrDefault();
-
-            if (vidNode == null)
-            {
-                vidNode = nodes.First();
-            }
+            var vidNode = nodes.ChildNodes[3].FirstChild.NextSibling.FirstChild.NextSibling.ChildNodes[3].FirstChild.NextSibling;
 
             string title = WebUtility.HtmlDecode(vidNode.GetAttributeValue("title"));
             Uri fullVideoUrl = new Uri(website, vidNode.GetAttributeValue("href"));
