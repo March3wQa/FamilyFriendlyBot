@@ -69,7 +69,7 @@ namespace FamilyFriendlyBot.Modules
                     Title = "Filmik dla ciebie",
                     Description = videos[itemNum].Title
                 };
-                builder.WithImageUrl(videos[itemNum].ThumbnailUri.ToString());
+                builder.WithImageUrl(videos[itemNum].ThumbnailUri.AbsoluteUri);
                 builder.AddField(new EmbedFieldBuilder()
                 {
                     Name = $"Link: {videos[itemNum].VideoUri}",
@@ -126,8 +126,7 @@ namespace FamilyFriendlyBot.Modules
                     Title = "Tego szukałeś/aś?",
                     Description = outVid.Title
                 };
-
-                builder.WithImageUrl(outVid.ThumbnailUri.ToString());
+                builder.WithImageUrl(outVid.ThumbnailUri.AbsoluteUri);
                 builder.AddField(new EmbedFieldBuilder()
                 {
                     Name = $"Link: {outVid.VideoUri}",

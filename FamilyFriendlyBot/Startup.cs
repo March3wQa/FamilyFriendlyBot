@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace FamilyFriendlyBot
 {
@@ -41,7 +42,8 @@ namespace FamilyFriendlyBot
             .AddSingleton<CommandHandler>()         // Add the command handler to the collection
             .AddSingleton<StartupService>()         // Add startupservice to the collection
             .AddSingleton<LoggingService>()         // Add loggingservice to the collection
-            .AddSingleton<Random>();                // Add random to the collection
+            .AddSingleton<Random>()                 // Add random to the collection
+            .AddSingleton<HttpClient>();
         }
     }
 }
