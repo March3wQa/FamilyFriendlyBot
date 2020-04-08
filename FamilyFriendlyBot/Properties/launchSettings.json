@@ -1,10 +1,7 @@
 {
   "profiles": {
-    "SLAB.Bot": {
-      "commandName": "Project",
-      "environmentVariables": {
-        "DISCORD_TOKEN": "NTE2MTY5MTUxODQ1MzY3ODA5.Xo2_cA.2-UBo5cBn5FUETfb-wuww_4ffMA"
-      }
+    "FamilyFriendlyBot": {
+      "commandName": "Project"
     }
   }
 }

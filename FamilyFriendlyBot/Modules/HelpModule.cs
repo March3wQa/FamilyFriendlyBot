@@ -24,7 +24,7 @@ namespace FamilyFriendlyBot.Modules
         [Alias("commands", "komendy")]
         public async Task HelpAsync()
         {
-            string prefix = "s!";
+            string prefix = "-";
             var builder = new EmbedBuilder()
             {
                 Color = Color.Green,

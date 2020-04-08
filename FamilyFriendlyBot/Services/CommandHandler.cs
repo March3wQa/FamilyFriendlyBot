@@ -1,6 +1,6 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
-using SLAB.Bot.TypeReaders;
+using FamilyFriendlyBot.TypeReaders;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -39,7 +39,7 @@ namespace FamilyFriendlyBot.Services
             var context = new SocketCommandContext(_discord, msg);     // Create the command context
 
             int argPos = 0;     // Check if the message has a valid command prefix
-            if (msg.HasCharPrefix("-", ref argPos) || msg.HasMentionPrefix(_discord.CurrentUser, ref argPos))
+            if (msg.HasCharPrefix('-', ref argPos) || msg.HasMentionPrefix(_discord.CurrentUser, ref argPos))
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _provider);     // Execute the command
 
