@@ -74,55 +74,49 @@ namespace FamilyFriendlyBot.Modules
         [Summary("Daje losowy filmik pasujący do wyszukiwania ze strony Pornhub")]
         [Alias("filmik")]
         public async Task VideoAsync(
-            [Summary("Rzeczy do wyszukania")]string query,
-            [Summary("Liczba stron do przeszukania")]int pages = 1)
+            [Summary("Słowa kluczowe")][Remainder]string query)
         {
-            if (pages > 10 || pages < 1)
-                await ReplyAsync($"Argument **pages** nie może być równy {pages}, musi się zawierać między 1 a 10 włącznie.");
-
             var browser = new ScrapingBrowser();
 
             query = query.Replace(' ', '+');
 
-            List<PornVideo> videos = new List<PornVideo>();
+            Uri searchUri = new Uri(website, $"/video/search?search={query}");
 
-            for (int i = 1; i <= pages; i++)
+            WebPage page = browser.NavigateToPage(searchUri);
+
+            var nodes = page.Html.CssSelect("a.linkVideoThumb");
+
+            PornVideo outVid = null;
+
+            foreach (var video in nodes)
             {
-                Uri searchUri = new Uri(website, $"/video/search?search={query}&page={i}");
-
-                WebPage page = browser.NavigateToPage(searchUri);
-
-                var nodes = page.Html.CssSelect("a.linkVideoThumb");
-
-                foreach (var video in nodes)
+                string title = WebUtility.HtmlDecode(video.GetAttributeValue("title"));
+                Uri fullVideoUrl = new Uri(website, video.GetAttributeValue("href"));
+                var imgNode = video.ChildNodes.ToArray()[1];
+                Uri imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
+                outVid = new PornVideo
                 {
-                    string title = WebUtility.HtmlDecode(video.GetAttributeValue("title"));
-                    Uri fullVideoUrl = new Uri(website, video.GetAttributeValue("href"));
-                    var imgNode = video.ChildNodes.ToArray()[1];
-                    Uri imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
-                    videos.Add(new PornVideo
-                    {
-                        Title = title,
-                        VideoUri = fullVideoUrl,
-                        ThumbnailUri = imageUri
-                    });
-                }
+                    Title = title,
+                    VideoUri = fullVideoUrl,
+                    ThumbnailUri = imageUri
+                };
+                break;
             }
-
-            int itemNum = _rand.Next(0, videos.Count - 1);
 
             var builder = new EmbedBuilder()
             {
                 Color = new Color(0xFFA31A),
-                Title = "Filmik dla ciebie",
-                Description = videos[itemNum].Title
+                Title = "Tego szukałeś/łaś?",
+                Description = outVid.Title
             };
-            builder.WithImageUrl(videos[itemNum].ThumbnailUri.ToString());
+
+            builder.WithImageUrl(outVid.ThumbnailUri.ToString());
             builder.AddField(new EmbedFieldBuilder()
             {
-                Name = $"Link: {videos[itemNum].VideoUri}",
-                Value = $"Obejrzyj go [TUTAJ]({videos[itemNum].VideoUri})"
+                Name = $"Link: {outVid.VideoUri}",
+                Value = $"Obejrzyj go [TUTAJ]({outVid.VideoUri})"
             });
+
             builder.WithCurrentTimestamp();
 
             await ReplyAsync("", false, builder.Build());
