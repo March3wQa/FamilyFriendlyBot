@@ -86,27 +86,36 @@ namespace FamilyFriendlyBot.Modules
 
             var nodes = page.Html.CssSelect("a.linkVideoThumb");
 
-            PornVideo outVid = null;
+            var vidNode = nodes.Where(x => x.GetAttributeValue("title") == query).FirstOrDefault();
 
-            foreach (var video in nodes)
+            if (vidNode == null)
             {
-                string title = WebUtility.HtmlDecode(video.GetAttributeValue("title"));
-                Uri fullVideoUrl = new Uri(website, video.GetAttributeValue("href"));
-                var imgNode = video.ChildNodes.ToArray()[1];
-                Uri imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
-                outVid = new PornVideo
-                {
-                    Title = title,
-                    VideoUri = fullVideoUrl,
-                    ThumbnailUri = imageUri
-                };
-                break;
+                vidNode = nodes.First();
             }
+
+            string title = WebUtility.HtmlDecode(vidNode.GetAttributeValue("title"));
+            Uri fullVideoUrl = new Uri(website, vidNode.GetAttributeValue("href"));
+            var imgNode = vidNode.ChildNodes.ToArray()[1];
+            Uri imageUri;
+            try
+            {
+                imageUri = new Uri(imgNode.GetAttributeValue("data-thumb_url"));
+            }
+            catch (Exception)
+            {
+                imageUri = new Uri("https://i2.wp.com/www.scribblesandcrumbs.com/wp-content/plugins/penci-portfolio//images/no-thumbnail.jpg");
+            }
+            var outVid = new PornVideo
+            {
+                Title = title,
+                VideoUri = fullVideoUrl,
+                ThumbnailUri = imageUri
+            };
 
             var builder = new EmbedBuilder()
             {
                 Color = new Color(0xFFA31A),
-                Title = "Tego szukałeś/łaś?",
+                Title = "Tego szukałeś/aś?",
                 Description = outVid.Title
             };
 
@@ -115,7 +124,11 @@ namespace FamilyFriendlyBot.Modules
             {
                 Name = $"Link: {outVid.VideoUri}",
                 Value = $"Obejrzyj go [TUTAJ]({outVid.VideoUri})"
-            });
+            })
+                .WithFooter(new EmbedFooterBuilder()
+                {
+                    Text = "Jeśli nie tego szukałeś/aś, spróbuj wprowadzić inne zapytanie"
+                });
 
             builder.WithCurrentTimestamp();
 
