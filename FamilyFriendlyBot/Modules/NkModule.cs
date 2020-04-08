@@ -13,6 +13,7 @@ namespace FamilyFriendlyBot.Modules
 {
     [Group("nk")]
     [Summary("Grupa komend 'niech ktoś'")]
+    [RequireNsfw]
     public class NkModule : ModuleBase<SocketCommandContext>
     {
         private readonly Uri website = new Uri("https://pornhub.com/");
