@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace FamilyFriendlyBot.Modules
@@ -26,7 +27,7 @@ namespace FamilyFriendlyBot.Modules
 
         [Command("video")]
         [Summary("Daje losowy filmik ze strony Pornhub")]
-        [Alias("filmik")]
+        [Alias("filmik", "link")]
         public async Task VideoAsync()
         {
             using (Context.Channel.EnterTypingState())
@@ -83,7 +84,7 @@ namespace FamilyFriendlyBot.Modules
 
         [Command("video")]
         [Summary("Daje losowy filmik pasujący do wyszukiwania ze strony Pornhub")]
-        [Alias("filmik")]
+        [Alias("filmik", "link")]
         public async Task VideoAsync(
             [Summary("Słowa kluczowe")][Remainder]string query)
         {
@@ -142,6 +143,64 @@ namespace FamilyFriendlyBot.Modules
                 await ReplyAsync("", false, builder.Build());
             }
         }
+
+        [Command("photo")]
+        [Summary("Wysyła losowe zdjęcie ze strony Pornhub")]
+        [Alias("zdjęcie", "img")]
+        public async Task PhotoAsync()
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                var browser = new ScrapingBrowser();
+
+                Uri albumsWebsite = new Uri(website, "/albums/female-misc-straight-transgender-uncategorized");
+
+                WebPage page = browser.NavigateToPage(albumsWebsite);
+
+                var albumNodes = page.Html.CssSelect("div.photoAlbumListBlock");
+
+                List<PornImageAlbum> albums = new List<PornImageAlbum>(albumNodes.Count());
+
+                foreach (var albumNode in albumNodes)
+                {
+                    string title = WebUtility.HtmlDecode(albumNode.GetAttributeValue("title"));
+                    Uri pathUri = new Uri(website, albumNode.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href"));
+                    albums.Add(new PornImageAlbum
+                    {
+                        Name = title,
+                        PathUri = pathUri
+                    });
+                }
+
+                int albumNum = _rand.Next(0, albums.Count - 1);
+
+                page = browser.NavigateToPage(albums[albumNum].PathUri);
+
+                var imageNodes = page.Html.CssSelect("div.photoAlbumListBlock");
+
+                List<Uri> imageUris = new List<Uri>(imageNodes.Count());
+
+                imageNodes.ToList().ForEach(x => imageUris.Add(new Uri(x.GetAttributeValue("data-bkg"))));
+
+                int imageNum = _rand.Next(0, imageUris.Count - 1);
+
+                var builder = new EmbedBuilder()
+                {
+                    Color = new Color(0xFFA31A),
+                    Title = "Zdjęcie dla ciebie",
+                    Description = $"{albums[albumNum].Name} - zdjęcie nr {imageNum + 1}"
+                };
+                builder.WithImageUrl(imageUris[imageNum].AbsoluteUri);
+                builder.AddField(new EmbedFieldBuilder()
+                {
+                    Name = $"Link: {albums[albumNum].PathUri}",
+                    Value = $"Zobacz album [TUTAJ]({albums[albumNum].PathUri})"
+                });
+                builder.WithCurrentTimestamp();
+
+                await ReplyAsync("", false, builder.Build());
+            }
+        }
     }
 
     internal class PornVideo
@@ -149,5 +208,11 @@ namespace FamilyFriendlyBot.Modules
         public string Title { get; set; }
         public Uri VideoUri { get; set; }
         public Uri ThumbnailUri { get; set; }
+    }
+
+    internal class PornImageAlbum
+    {
+        public string Name { get; set; }
+        public Uri PathUri { get; set; }
     }
 }
