@@ -55,7 +55,6 @@ namespace FamilyFriendlyBot.Services
                     switch (result.Error)
                     {
                         case CommandError.UnknownCommand:
-                            await context.Channel.SendMessageAsync("Nie mam takiej komendy.");
                             break;
 
                         case CommandError.BadArgCount:
