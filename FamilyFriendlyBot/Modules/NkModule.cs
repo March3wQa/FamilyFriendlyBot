@@ -85,8 +85,7 @@ namespace FamilyFriendlyBot.Modules
         [Command("video")]
         [Summary("Daje losowy filmik pasujący do wyszukiwania ze strony Pornhub")]
         [Alias("filmik", "link")]
-        public async Task VideoAsync(
-            [Summary("Słowa kluczowe")][Remainder]string query)
+        public async Task VideoAsync([Summary("Słowa kluczowe")][Remainder]string query)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -195,6 +194,57 @@ namespace FamilyFriendlyBot.Modules
                 {
                     Name = $"Link: {albums[albumNum].PathUri}",
                     Value = $"Zobacz album [TUTAJ]({albums[albumNum].PathUri})"
+                });
+                builder.WithCurrentTimestamp();
+
+                await ReplyAsync("", false, builder.Build());
+            }
+        }
+
+        [Command("photo")]
+        [Summary("Wysyła losowe zdjęcie ze strony Pornhub")]
+        [Alias("zdjęcie", "img")]
+        public async Task PhotoAsync([Summary("Słowa kluczowe")][Remainder]string query)
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                var browser = new ScrapingBrowser();
+
+                query = query.Replace(' ', '+');
+
+                Uri albumsWebsite = new Uri(website, $"/albums/female-misc-straight-transgender-uncategorized?search={query}");
+
+                WebPage page = browser.NavigateToPage(albumsWebsite);
+
+                var albumNode = page.Html.CssSelect("ul#photosAlbumsSection").First().ChildNodes[3].ChildNodes[1];
+
+                PornImageAlbum album = new PornImageAlbum
+                {
+                    Name = WebUtility.HtmlDecode(albumNode.GetAttributeValue("title")),
+                    PathUri = new Uri(website, albumNode.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href"))
+                };
+
+                page = browser.NavigateToPage(album.PathUri);
+
+                var imageNodes = page.Html.CssSelect("div.photoAlbumListBlock");
+
+                List<Uri> imageUris = new List<Uri>(imageNodes.Count());
+
+                imageNodes.ToList().ForEach(x => imageUris.Add(new Uri(x.GetAttributeValue("data-bkg"))));
+
+                int imageNum = _rand.Next(0, imageUris.Count - 1);
+
+                var builder = new EmbedBuilder()
+                {
+                    Color = new Color(0xFFA31A),
+                    Title = "Zdjęcie dla ciebie",
+                    Description = $"{album.Name} - zdjęcie nr {imageNum + 1}"
+                };
+                builder.WithImageUrl(imageUris[imageNum].AbsoluteUri);
+                builder.AddField(new EmbedFieldBuilder()
+                {
+                    Name = $"Link: {album.PathUri}",
+                    Value = $"Zobacz album [TUTAJ]({album.PathUri})"
                 });
                 builder.WithCurrentTimestamp();
 
