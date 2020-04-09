@@ -43,7 +43,8 @@ namespace FamilyFriendlyBot
             .AddSingleton<StartupService>()         // Add startupservice to the collection
             .AddSingleton<LoggingService>()         // Add loggingservice to the collection
             .AddSingleton<Random>()                 // Add random to the collection
-            .AddSingleton<HttpClient>();
+            .AddSingleton<HttpClient>()
+            .AddSingleton<Utilities>();
         }
     }
 }

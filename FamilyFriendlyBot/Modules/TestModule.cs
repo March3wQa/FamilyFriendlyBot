@@ -12,6 +12,13 @@ namespace FamilyFriendlyBot.Modules
     [Summary("Moduł testowy")]
     public class TestModule : ModuleBase<SocketCommandContext>
     {
+        private readonly Utilities _utilities;
+
+        public TestModule(Utilities utilities)
+        {
+            _utilities = utilities;
+        }
+
         [Command("echo")]
         [Summary("Powatrza to co chcesz")]
         [Alias("repeat", "say", "powtórz")]
@@ -28,7 +35,7 @@ namespace FamilyFriendlyBot.Modules
                     builder.Append(' ');
             }
 
-            foreach (string msg in Utilities.Split(builder, 2000))
+            foreach (string msg in _utilities.Split(builder, 2000))
             {
                 await ReplyAsync(msg);
             }

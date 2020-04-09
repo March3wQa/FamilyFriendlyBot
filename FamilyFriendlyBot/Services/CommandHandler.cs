@@ -13,17 +13,20 @@ namespace FamilyFriendlyBot.Services
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
         private readonly IServiceProvider _provider;
+        private readonly Utilities _utilities;
 
         // DiscordSocketClient, CommandService, IConfigurationRoot, and IServiceProvider are
         // injected automatically from the IServiceProvider
         public CommandHandler(
             DiscordSocketClient discord,
             CommandService commands,
-            IServiceProvider provider)
+            IServiceProvider provider,
+            Utilities utilities)
         {
             _discord = discord;
             _commands = commands;
             _provider = provider;
+            _utilities = utilities;
 
             _discord.MessageReceived += OnMessageReceivedAsync;
 
@@ -38,8 +41,12 @@ namespace FamilyFriendlyBot.Services
 
             var context = new SocketCommandContext(_discord, msg);     // Create the command context
 
+            var guildId = context.Guild.Id.ToString();
+
+            string prefix = await _utilities.GetPrefixes(guildId);
+
             int argPos = 0;     // Check if the message has a valid command prefix
-            if (msg.HasCharPrefix('-', ref argPos) || msg.HasMentionPrefix(_discord.CurrentUser, ref argPos))
+            if (msg.HasStringPrefix(prefix, ref argPos) || msg.HasMentionPrefix(_discord.CurrentUser, ref argPos))
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _provider);     // Execute the command
 

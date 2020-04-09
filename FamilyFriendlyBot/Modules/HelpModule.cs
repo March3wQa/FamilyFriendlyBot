@@ -12,10 +12,12 @@ namespace FamilyFriendlyBot.Modules
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
         private readonly CommandService _service;
+        private readonly Utilities _utilities;
 
-        public HelpModule(CommandService service)
+        public HelpModule(CommandService service, Utilities utilities)
         {
             _service = service;
+            _utilities = utilities;
         }
 
         [Command("help")]
@@ -23,7 +25,10 @@ namespace FamilyFriendlyBot.Modules
         [Alias("commands", "komendy")]
         public async Task HelpAsync()
         {
-            string prefix = "-";
+            string guildId = Context.Guild.Id.ToString();
+
+            string prefix = await _utilities.GetPrefixes(guildId);
+
             var builder = new EmbedBuilder()
             {
                 Color = Color.Green,
