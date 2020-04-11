@@ -17,7 +17,7 @@ namespace FamilyFriendlyBot.Modules
     [RequireNsfw]
     public class NkModule : ModuleBase<SocketCommandContext>
     {
-        private readonly Uri websitePh = new Uri("https://pornhub.com/");
+        private readonly Uri _websitePh = new Uri("https://pornhub.com/");
         private readonly Random _rand;
 
         public NkModule(Random random)
@@ -34,7 +34,7 @@ namespace FamilyFriendlyBot.Modules
             {
                 var browser = new ScrapingBrowser();
 
-                WebPage page = browser.NavigateToPage(websitePh);
+                WebPage page = browser.NavigateToPage(_websitePh);
 
                 var nodes = page.Html.CssSelect("a.linkVideoThumb");
 
@@ -43,7 +43,7 @@ namespace FamilyFriendlyBot.Modules
                 foreach (var video in nodes)
                 {
                     string title = WebUtility.HtmlDecode(video.GetAttributeValue("title"));
-                    Uri fullVideoUrl = new Uri(websitePh, video.GetAttributeValue("href"));
+                    Uri fullVideoUrl = new Uri(_websitePh, video.GetAttributeValue("href"));
                     var imgNode = video.ChildNodes.ToArray()[1];
                     Uri imageUri;
                     try
@@ -93,7 +93,7 @@ namespace FamilyFriendlyBot.Modules
 
                 query = query.Replace(' ', '+');
 
-                Uri searchUri = new Uri(websitePh, $"/video/search?search={query}");
+                Uri searchUri = new Uri(_websitePh, $"/video/search?search={query}");
 
                 WebPage page = browser.NavigateToPage(searchUri);
 
@@ -102,7 +102,7 @@ namespace FamilyFriendlyBot.Modules
                 var vidNode = nodes.ChildNodes[3].FirstChild.NextSibling.FirstChild.NextSibling.ChildNodes[3].FirstChild.NextSibling;
 
                 string title = WebUtility.HtmlDecode(vidNode.GetAttributeValue("title"));
-                Uri fullVideoUrl = new Uri(websitePh, vidNode.GetAttributeValue("href"));
+                Uri fullVideoUrl = new Uri(_websitePh, vidNode.GetAttributeValue("href"));
                 var imgNode = vidNode.ChildNodes.ToArray()[1];
                 Uri imageUri;
                 try
@@ -152,7 +152,7 @@ namespace FamilyFriendlyBot.Modules
             {
                 var browser = new ScrapingBrowser();
 
-                Uri albumsWebsite = new Uri(websitePh, "/albums/female-misc-straight-transgender-uncategorized");
+                Uri albumsWebsite = new Uri(_websitePh, "/albums/female-misc-straight-transgender-uncategorized");
 
                 WebPage page = browser.NavigateToPage(albumsWebsite);
 
@@ -163,7 +163,7 @@ namespace FamilyFriendlyBot.Modules
                 foreach (var albumNode in albumNodes)
                 {
                     string title = WebUtility.HtmlDecode(albumNode.GetAttributeValue("title"));
-                    Uri pathUri = new Uri(websitePh, albumNode.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href"));
+                    Uri pathUri = new Uri(_websitePh, albumNode.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href"));
                     albums.Add(new PornImageAlbum
                     {
                         Name = title,
@@ -212,7 +212,7 @@ namespace FamilyFriendlyBot.Modules
 
                 query = query.Replace(' ', '+');
 
-                Uri albumsWebsite = new Uri(websitePh, $"/albums/female-misc-straight-transgender-uncategorized?search={query}");
+                Uri albumsWebsite = new Uri(_websitePh, $"/albums/female-misc-straight-transgender-uncategorized?search={query}");
 
                 WebPage page = browser.NavigateToPage(albumsWebsite);
 
@@ -221,7 +221,7 @@ namespace FamilyFriendlyBot.Modules
                 PornImageAlbum album = new PornImageAlbum
                 {
                     Name = WebUtility.HtmlDecode(albumNode.GetAttributeValue("title")),
-                    PathUri = new Uri(websitePh, albumNode.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href"))
+                    PathUri = new Uri(_websitePh, albumNode.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href"))
                 };
 
                 page = browser.NavigateToPage(album.PathUri);

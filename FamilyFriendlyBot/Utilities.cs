@@ -5,14 +5,15 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace FamilyFriendlyBot
 {
     public class Utilities
     {
         private readonly HttpClient _client;
-        private readonly string GitHubApiToken = Environment.GetEnvironmentVariable("GITHUB_API_TOKEN");
-        private Dictionary<string, string> Prefixes = new Dictionary<string, string>();
+        private readonly string _gitHubApiToken = Environment.GetEnvironmentVariable("GITHUB_API_TOKEN");
+        private Dictionary<string, string> _prefixes = new Dictionary<string, string>();
 
         public Utilities(HttpClient client)
         {
@@ -38,21 +39,21 @@ namespace FamilyFriendlyBot
         public async Task RefreshPrefixes()
         {
             var content = await _client.GetStringAsync("https://gist.githubusercontent.com/March3wQa/16e4be2a48f911cd592a626d4bd28a3d/raw/88cec452f4656e556f57330486d733db367ae669/prefixes.json");
-            Prefixes = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
+            _prefixes = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
         }
 
         public async Task<string> GetPrefixes(string key)
         {
-            Prefixes.TryGetValue(key, out string prefix);
+            _prefixes.TryGetValue(key, out string prefix);
 
             if (String.IsNullOrEmpty(prefix))
             {
                 var content = await _client.GetStringAsync("https://gist.githubusercontent.com/March3wQa/16e4be2a48f911cd592a626d4bd28a3d/raw/88cec452f4656e556f57330486d733db367ae669/prefixes.json");
-                Prefixes = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
-                Prefixes.TryGetValue(key, out prefix);
+                _prefixes = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
+                _prefixes.TryGetValue(key, out prefix);
                 if (String.IsNullOrEmpty(prefix))
                 {
-                    Prefixes[key] = "-";
+                    _prefixes[key] = "-";
                     return "-";
                 }
                 return prefix;
@@ -62,29 +63,54 @@ namespace FamilyFriendlyBot
 
         public async Task SetPrefixes(string key, string value)
         {
-            Prefixes[key] = value;
+            _prefixes[key] = value;
 
-            string prefixesEscaped = "{";
-
-            foreach (var pair in Prefixes)
+            string prefixesJson = JsonConvert.SerializeObject(_prefixes, new JsonSerializerSettings
             {
-                prefixesEscaped += "\\\"" + pair.Key + "\\\"" + ":" + "\\\"" + pair.Value + "\\\"" + ",";
-            }
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
 
-            prefixesEscaped = prefixesEscaped.Remove(prefixesEscaped.Length - 1);
-            prefixesEscaped += "}";
+            var fileObject = new GitHubPatchObject.FileObject
+            {
+                Content = prefixesJson
+            };
 
-            var json = $"{{\"description\":\"Servers bot prefixes\",\"files\":{{\"bit_prefixes.json\":{{\"content\":\"{prefixesEscaped}\",\"filename\":\"prefixes.json\"}}}}}}";
+            var patchObject = new GitHubPatchObject
+            {
+                Files = new Dictionary<string, GitHubPatchObject.FileObject>
+                {
+                    { "bot_prefixes.json", fileObject }
+                }
+            };
+
+            var json = JsonConvert.SerializeObject(patchObject, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+
             var data = new StringContent(json, Encoding.UTF8, "application/json");
 
             HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Patch, "https://api.github.com/gists/16e4be2a48f911cd592a626d4bd28a3d")
             {
                 Content = data
             };
-            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", $"{GitHubApiToken}");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _gitHubApiToken);
             requestMessage.Headers.UserAgent.ParseAdd("March3wQa/FamilyFriendlyBot");
 
-            (await _client.SendAsync(requestMessage)).EnsureSuccessStatusCode();
+            var response = await _client.SendAsync(requestMessage);
+            response.EnsureSuccessStatusCode();
         }
+    }
+
+    internal struct GitHubPatchObject
+    {
+        internal struct FileObject
+        {
+            public string Content { get; set; }
+            public string Filename { get => "prefixes.json"; }
+        }
+
+        public string Description { get => "Servers' bot prefixes"; }
+        public IDictionary<string, FileObject> Files { get; set; }
     }
 }
