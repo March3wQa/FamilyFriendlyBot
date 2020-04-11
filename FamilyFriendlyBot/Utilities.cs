@@ -79,6 +79,9 @@ namespace FamilyFriendlyBot
 
         public async Task SetPrefixes(string key, string value)
         {
+            if (!new Regex(@"[^a-zA-Z\d\s:]+").IsMatch(value[^1].ToString()))
+                value += " ";
+
             _prefixes[key] = value;
 
             string prefixesJson = JsonConvert.SerializeObject(_prefixes, new JsonSerializerSettings

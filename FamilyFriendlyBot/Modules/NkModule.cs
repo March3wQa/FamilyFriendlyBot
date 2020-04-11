@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace FamilyFriendlyBot.Modules
 {
-    [Group("nk")]
     [Summary("Grupa komend 'niech ktoś'")]
     [RequireNsfw]
     public class NkModule : ModuleBase<SocketCommandContext>

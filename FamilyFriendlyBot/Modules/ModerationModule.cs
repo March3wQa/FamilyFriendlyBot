@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using FamilyFriendlyBot.Preconditions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,6 +11,7 @@ namespace FamilyFriendlyBot.Modules
     [RequireUserPermission(Discord.GuildPermission.Administrator, Group = "Permission")]
     [RequireOwner(Group = "Permission")]
     [RequireUserPermission(Discord.GuildPermission.ManageChannels, Group = "Permission")]
+    [RequireUser(312223735505747968, Group = "Permission")]
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
         private readonly Utilities _utilities;
