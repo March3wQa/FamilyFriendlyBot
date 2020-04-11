@@ -32,7 +32,7 @@ namespace FamilyFriendlyBot.Services
 
         public async Task StartAsync()
         {
-            await _utilities.RefreshPrefixes();
+            await _utilities.DownloadPrefixes();
 
             string discordToken = Environment.GetEnvironmentVariable("DISCORD_TOKEN");     // Get the discord token from the config file
             if (string.IsNullOrWhiteSpace(discordToken))
